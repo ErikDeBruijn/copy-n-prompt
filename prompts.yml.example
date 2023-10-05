@@ -1,0 +1,18 @@
+- name: "Summarize"
+  prompt: "TL;DR: {paste}"
+  alert: true
+
+- name: "Improve writing"
+  prompt: "You are great at writing. Improve the wording of the following text while retaining the style: {paste}"
+
+- name: "Translate to NL"
+  prompt: "translate the following to Dutch (NL): {paste}"
+  alert: true
+
+- name: "Translate to English"
+  prompt: "translate the following to English (EN): {paste}"
+  alert: true
+
+- name: "Find problems in this code"
+  prompt: "You're a code auditor that has a job to point out security issues that may be present in the following code: {paste}"
+  alert: true
