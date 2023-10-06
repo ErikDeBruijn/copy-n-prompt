@@ -1,18 +1,77 @@
-- name: "Summarize"
-  prompt: "TL;DR: {paste}"
-  alert: true
+- name: "Find problems in this code"
+  image: exclamationmark
+  prompt: "You're a code auditor that has a job to point out security issues that may be present in the following code:"
+
+- name: "TL;DR"
+  image: text.badge.minus
+  prompt: |
+    Summarize this text 
+    """
+    {paste}
+    """
+
+- name: "Email subject"
+  image: envelope
+  prompt: |
+    Verzin een subject voor een email met deze tekst, graag zonder quotes, en niet te clickbaity.
+    
+    """
+    {paste}
+    """
+
+- name: "Generate tweets"
+  image: checkmark.seal.fill
+  prompt: |
+    Make 10 tweets based on this text keep the language the same as the source, put every tweet on a new line and don't number them.
+    """
+    {paste}
+    """
 
 - name: "Improve writing"
-  prompt: "You are great at writing. Improve the wording of the following text while retaining the style: {paste}"
+  image: text.badge.checkmark
+  prompt: |
+    I will give you text content, you will rewrite it and output a better version of my text. Keep the meaning the same. Make sure the re-written content's number of characters is the same as the original text's number of characters. Do not alter the original structure and formatting outlined in any way. Only give me the output and nothing else. Now, using the concepts above, re-write the following text. Respond in the same language variety or dialect of the following text:
+    """
+    {paste}
+    """
+
+- name: "Fix spelling & grammar"
+  image: text.badge.checkmark
+  prompt: |
+    I will give you text content, you will correct the spelling, syntax and grammar of this text. Correct any spelling, syntax, or grammar mistakes in the text I give you without making any improvements or changes to the original meaning or style. In other words, only correct spelling, syntax, or grammar mistakes, do not make improvements. If the original text has no mistake, just output the original text and nothing else. Keep the meaning the same. Make sure the re-written content's number of words is the same as the original text's number of characters. Do not alter the original structure and formatting outlined in any way. Only give me the output and nothing else. Now, using the concepts above, re-write the following text. Respond in the same language variety or dialect of the following text:
+    """
+    {paste}
+    """
 
 - name: "Translate to NL"
-  prompt: "translate the following to Dutch (NL): {paste}"
-  alert: true
+  image: flag
+  prompt: |
+    translate the following to Dutch (NL):
+    
+    """
+    {paste}
+    """
+- name: "Translate to EN"
+  image: flag
+  prompt: |
+    translate the following to American English (EN):
+    
+    """
+    {paste}
+    """
 
-- name: "Translate to English"
-  prompt: "translate the following to English (EN): {paste}"
+- name: "Product owner"
+  image: person.crop.circle
   alert: true
+  prompt: |
+    Je bent de product owner bij Stekker, gespecialiseerd in slimme laadoplossingen voor elektrische auto's. Je bent bekend met de 'Jobs to be Done'-methodologie. Je ontvangt een notitie van een collega en weet meteen hoe je dit item op de product backlog moet plaatsen. Gebruik het volgende format voor het toevoegen aan de backlog:
+    
+    Als [rol bijv. beheerder, gebruiker van de app]
+    Wil ik [het doel]
+    Zodat [het voordeel]
 
-- name: "Find problems in this code"
-  prompt: "You're a code auditor that has a job to point out security issues that may be present in the following code: {paste}"
-  alert: true
+    Hier is de notitie van je collega:
+    
+    """
+    {paste}
+    """
