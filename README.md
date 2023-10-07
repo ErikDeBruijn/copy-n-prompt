@@ -8,8 +8,8 @@ Check out the [DEMO VIDEO!](https://github.com/ErikDeBruijn/copy-n-prompt/raw/ma
 git clone https://github.com/ErikDeBruijn/copy-n-prompt
 cd copy-n-prompt
 mkdir ~/.copy-n-prompt/
-cp ~/.copy-n-prompt/.openai.yml.example ~/.copy-n-prompt/.openai.yaml
-cp ~/.copy-n-prompt/prompts.yml ~/.copy-n-prompt/
+cp .openai.yml.example ~/.copy-n-prompt/.openai.yaml
+cp prompts.yml.example ~/.copy-n-prompt/prompts.yml
 ```
 Edit the `~/.copy-n-prompt/.openai.yaml` and ensure it has a working OpenAI API key. Sign up at OpenAI and generate one [here](https://platform.openai.com/account/api-keys). Then copy it into the `.openai.yaml` file.
 
