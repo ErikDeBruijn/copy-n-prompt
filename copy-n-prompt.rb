@@ -50,54 +50,58 @@ editor = ENV['EDITOR'] || 'nano'
 puts '---'
 puts "Edit Prompts | bash=#{editor} param1=#{prompts_file} terminal=true"
 
-if ARGV.length.positive?
-  begin
+debug_to_file("ARGV.length: #{ARGV.length}")
+
+begin
+  if ARGV.length > 0
     prompt_index = ARGV[0].to_i
     prompt_text = prompts[prompt_index]
-  rescue StandardError
-    puts 'Invalid index'
-    exit(1)
+
+    debug_to_file("gpt request")
+
+    clipboard_content = `pbpaste`
+    uri = URI.parse('https://api.openai.com/v1/chat/completions')
+    request = Net::HTTP::Post.new(uri)
+    request.content_type = 'application/json'
+    request['Authorization'] = "Bearer #{api_key}"
+    request.body = JSON.dump({
+                               'model' => 'gpt-3.5-turbo',
+                               'messages' => [
+                                 {
+                                   'role' => 'system',
+                                   'content' => prompt_text['prompt']
+                                 },
+                                 {
+                                   'role' => 'user',
+                                   'content' => clipboard_content.strip
+                                 }
+                               ],
+                               'temperature' => 1,
+                               'max_tokens' => 256,
+                               'top_p' => 1,
+                               'frequency_penalty' => 0,
+                               'presence_penalty' => 0
+                             })
+
+    req_options = {
+      use_ssl: uri.scheme == 'https'
+    }
+
+    debug_to_file("gpt request: #{request.body}")
+
+    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+      http.request(request)
+    end
+
+    debug_to_file("gpt_response: #{response.body}")
+
+    gpt_response = JSON.parse(response.body)['choices'][0]['message']['content'].strip.force_encoding('UTF-8')
+
+    IO.popen('/usr/bin/pbcopy', 'w') { |f| f.puts gpt_response }
+
+    system('afplay /System/Library/Sounds/Glass.aiff') unless prompt_text['alert'] == false
   end
-
-  clipboard_content = `pbpaste`
-  uri = URI.parse('https://api.openai.com/v1/chat/completions')
-  request = Net::HTTP::Post.new(uri)
-  request.content_type = 'application/json'
-  request['Authorization'] = "Bearer #{api_key}"
-  request.body = JSON.dump({
-                             'model' => 'gpt-3.5-turbo',
-                             'messages' => [
-                               {
-                                 'role' => 'system',
-                                 'content' => prompt_text['prompt']
-                               },
-                               {
-                                 'role' => 'user',
-                                 'content' => clipboard_content.strip
-                               }
-                             ],
-                             'temperature' => 1,
-                             'max_tokens' => 256,
-                             'top_p' => 1,
-                             'frequency_penalty' => 0,
-                             'presence_penalty' => 0
-                           })
-
-  req_options = {
-    use_ssl: uri.scheme == 'https'
-  }
-
-  debug_to_file("gpt request: #{request.body}")
-
-  response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-    http.request(request)
-  end
-
-  debug_to_file("gpt_response: #{response.body}")
-
-  gpt_response = JSON.parse(response.body)['choices'][0]['message']['content'].strip.force_encoding('UTF-8')
-
-  IO.popen('/usr/bin/pbcopy', 'w') { |f| f.puts gpt_response }
-
-  system('afplay /System/Library/Sounds/Glass.aiff') unless prompt_text['alert'] == false
+rescue StandardError => e
+  debug_to_file("Error: #{e}")
+  %x[osascript -e 'display alert "Error" message "Copy-n-pompt raised an error" as warning buttons "OK"']
 end
