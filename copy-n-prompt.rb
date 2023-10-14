@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
 # frozen_string_literal: true
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
@@ -59,7 +60,7 @@ begin
 
     debug_to_file("gpt request")
 
-    clipboard_content = `pbpaste`
+    clipboard_content = `pbpaste`.force_encoding('UTF-8')
     uri = URI.parse('https://api.openai.com/v1/chat/completions')
     request = Net::HTTP::Post.new(uri)
     request.content_type = 'application/json'
