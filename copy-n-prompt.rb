@@ -42,7 +42,7 @@ debug_to_file('Started copy-n-prompt!')
 
 prompts.each_with_index do |prompt, i|
   script_path = Shellwords.escape(File.expand_path(__FILE__))
-  image = prompt['image'] || "captions.bubble"
+  image = prompt['image'] || 'captions.bubble'
   puts %(#{prompt['name']} | bash=#{script_path} param1=#{i} terminal=false sfimage=#{image})
 end
 
@@ -58,7 +58,6 @@ if ARGV.length.positive?
     puts 'Invalid index'
     exit(1)
   end
-
 
   clipboard_content = `pbpaste`
   uri = URI.parse('https://api.openai.com/v1/chat/completions')
@@ -100,7 +99,5 @@ if ARGV.length.positive?
 
   IO.popen('/usr/bin/pbcopy', 'w') { |f| f.puts gpt_response }
 
-  unless prompt_text['alert'] == false
-    system("afplay /System/Library/Sounds/Glass.aiff")
-  end
+  system('afplay /System/Library/Sounds/Glass.aiff') unless prompt_text['alert'] == false
 end
