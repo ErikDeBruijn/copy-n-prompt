@@ -1,10 +1,17 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# <xbar.title>Copy-n-Prompt</xbar.title>
+# <xbar.version>v1.0</xbar.version>
+# <xbar.author>Erik de Bruijn</xbar.author>
+# <xbar.author.github>erikdebruijn</xbar.author.github>
+# <xbar.desc>A Swiftbar script to copy text that gets prompted to OpenAI's ChatGPT conversation API. The result is ready for you to paste.</xbar.desc>
+# <xbar.dependencies>ruby</xbar.dependencies>
+# <xbar.abouturl>https://erikdebruijn.nl/</xbar.abouturl>
+
 require 'yaml'
 require 'json'
-require 'net/http'
-require 'uri'
+require 'faraday'
 require 'shellwords'
 
 puts '📋🤖'
@@ -27,7 +34,7 @@ begin
   prompts = YAML.safe_load(File.read(prompts_file))
 rescue StandardError
   puts 'Prompts YAML not found | color=red'
-  puts "Edit Prompts | bash=nano param1=#{prompts_file} terminal=true"
+  puts "Edit Prompts | bash=nano param1=#{Shellwords.escape(prompts_file)} terminal=true"
   exit(0)
 end
 
@@ -43,50 +50,78 @@ end
 
 editor = ENV['EDITOR'] || 'nano'
 puts '---'
-puts "Edit Prompts | bash=#{editor} param1=#{prompts_file} terminal=true"
+puts "Edit Prompts | bash=#{editor} param1=#{Shellwords.escape(prompts_file)} terminal=true"
+
+puts '---'
+
+def cloud_mode?
+  current_mode = File.exist?(File.expand_path("~/.copy-n-prompt/mode")) ? File.read(File.expand_path("~/.copy-n-prompt/mode")).strip : "Cloud"
+  current_mode == "Cloud"
+end
+
+puts "Server: #{cloud_mode? ? "Cloud" : "Local"}"
+puts "Cloud mode | bash=#{__FILE__} param1=set_mode param2=Cloud terminal=false refresh=True sfimage=#{cloud_mode? ? "checkmark.icloud" : "icloud"}"
+puts "Local mode | bash=#{__FILE__} param1=set_mode param2=Local terminal=false refresh=True sfimage=#{cloud_mode? ? "shield" : "checkmark.shield"}"
+puts '---'
+
+# ... [rest of your existing code] ...
+
+# Check for mode change argument
+if ARGV.length > 1 && ARGV[0] == 'set_mode'
+  selected_mode = ARGV[1]
+  File.write(File.expand_path("~/.copy-n-prompt/mode"), selected_mode)
+  exit(0)
+end
 
 if ARGV.length.positive?
   begin
     prompt_index = ARGV[0].to_i
     prompt_text = prompts[prompt_index]
   rescue StandardError
-    puts 'Invalid index'
+    puts "Invalid index"
     exit(1)
   end
 
-
   clipboard_content = `pbpaste`
-  uri = URI.parse('https://api.openai.com/v1/chat/completions')
-  request = Net::HTTP::Post.new(uri)
-  request.content_type = 'application/json'
-  request['Authorization'] = "Bearer #{api_key}"
-  request.body = JSON.dump({
-                             'model' => 'gpt-3.5-turbo',
-                             'messages' => [
-                               {
-                                 'role' => 'system',
-                                 'content' => prompt_text['prompt']
-                               },
-                               {
-                                 'role' => 'user',
-                                 'content' => clipboard_content.strip
-                               }
-                             ],
-                             'temperature' => 1,
-                             'max_tokens' => 256,
-                             'top_p' => 1,
-                             'frequency_penalty' => 0,
-                             'presence_penalty' => 0
-                           })
 
-  req_options = {
-    use_ssl: uri.scheme == 'https'
+  payload = {
+    "model" => "gpt-4",
+    "messages" => [
+      {
+        "role" => "system",
+        "content" => prompt_text["prompt"]
+      },
+      {
+        "role" => "user",
+        "content" => clipboard_content.strip
+      }
+    "temperature" => 0.0,
+    "max_tokens" => 1000
   }
 
-  debug_to_file("gpt request: #{request.body}")
+  server_host = if cloud_mode?
+                  (settings["open_ai_host"] || "http://localhost:1234")
+                else
+                  (settings["open_ai_host_local"] || "http://localhost:1234")
+                end
 
-  response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-    http.request(request)
+  conn = Faraday.new(
+    url: server_host,
+    headers: {
+      "Content-Type" => "application/json",
+      "Authorization" => "Bearer #{api_key}"
+    }
+  )
+
+  begin
+    response = conn.post do |req|
+      req.url '/v1/chat/completions'
+      req.body = payload.to_json
+      req.options.timeout = 120  # open/read timeout in seconds
+    end
+  rescue Faraday::TimeoutError
+    puts 'Read timeout occurred'
+    exit(1)
   end
 
   debug_to_file("gpt_response: #{response.body}")
