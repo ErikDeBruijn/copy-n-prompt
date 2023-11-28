@@ -1,4 +1,5 @@
-#!/usr/bin/env ruby
+#!/Users/erik/.rbenv/shims/ruby
+
 # frozen_string_literal: true
 
 # <xbar.title>Copy-n-Prompt</xbar.title>
@@ -95,6 +96,7 @@ if ARGV.length.positive?
         "role" => "user",
         "content" => clipboard_content.strip
       }
+    ],
     "temperature" => 0.0,
     "max_tokens" => 1000
   }
